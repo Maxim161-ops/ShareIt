@@ -6,47 +6,38 @@ import ru.practicum.shareit.exception.EmailAlreadyExistsException;
 import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
-    private final Map<Long, User> users = new HashMap<>();
-    private long nextId = 1;
+    private final UserRepository userRepository;
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        User user = UserMapper.toUser(userDto);
 
-        boolean emailExists = users.values().stream()
-                .anyMatch(u -> u.getEmail().equals(user.getEmail()));
+        boolean emailExists = userRepository.findAll().stream()
+                .anyMatch(u -> u.getEmail().equals(userDto.getEmail()));
         if (emailExists) {
             throw new EmailAlreadyExistsException("Email уже существует");
         }
 
-        user.setId(nextId++);
+        User user = UserMapper.toUser(userDto);
+        User savedUser = userRepository.save(user);
 
-        users.put(user.getId(), user);
-
-        return UserMapper.toUserDto(user);
+        return UserMapper.toUserDto(savedUser);
     }
 
     @Override
     public UserDto getUser(Long id) {
-        User user = users.get(id);
-        if (user == null) {
-            throw new UserNotFoundException("Пользователь не найден");
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден с id " + id));
         return UserMapper.toUserDto(user);
     }
 
     @Override
     public List<UserDto> getAllUsers() {
-        return users.values()
+        return userRepository.findAll()
                 .stream()
                 .map(UserMapper::toUserDto)
                 .toList();
@@ -54,17 +45,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(Long id, UserDto userDto) {
-        User user = users.get(id);
-        if (user == null) {
-            throw new UserNotFoundException("Пользователь не найден");
-        }
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден с id " + id));
 
-        if (userDto.getName() != null) {
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
             user.setName(userDto.getName());
         }
 
-        if (userDto.getEmail() != null) {
-            boolean emailExists = users.values().stream()
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+            boolean emailExists = userRepository.findAll().stream()
                     .anyMatch(u -> !u.getId().equals(id) && u.getEmail().equals(userDto.getEmail()));
             if (emailExists) {
                 throw new EmailAlreadyExistsException("Email уже существует");
@@ -72,24 +61,9 @@ public class UserServiceImpl implements UserService {
             user.setEmail(userDto.getEmail());
         }
 
-        return UserMapper.toUserDto(user);
+        User savedUser = userRepository.save(user);
+        return UserMapper.toUserDto(savedUser);
     }
 
-    @Override
-    public void deleteUser(Long id) {
-        if (!users.containsKey(id)) {
-            throw new UserNotFoundException("Пользователь не найден");
-        }
-        users.remove(id);
-    }
-
-    @Override
-    public User findUser(Long id) {
-       User user = users.get(id);
-        if (user == null) {
-            throw new UserNotFoundException("Пользователь не найден");
-        }
-
-        return user;
-    }
+    
 }
