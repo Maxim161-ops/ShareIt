@@ -7,7 +7,7 @@ import java.util.*;
 
 @Slf4j
 @Repository
-public class InMemoryUserRepository implements UserRepository{
+public class InMemoryUserRepository implements UserRepository {
     private final Map<Long, User> users = new HashMap<>();
     private long nextId = 1;
 
