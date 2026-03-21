@@ -47,12 +47,13 @@ public class UserServiceImpl implements UserService {
         User user = getUserOrThrow(id);
 
         if (userDto.getName() != null
-                &&!userDto.getName().isBlank()
-                && userDto.getEmail().contains("@")) {
+                &&!userDto.getName().isBlank()) {
             user.setName(userDto.getName());
         }
 
-        if (userDto.getEmail() != null && !userDto.getEmail().isBlank()) {
+        if (userDto.getEmail() != null
+                && !userDto.getEmail().isBlank()
+                && userDto.getEmail().contains("@")) {
             boolean emailExists = userRepository.findAll().stream()
                     .anyMatch(u -> !u.getId().equals(id) && u.getEmail().equals(userDto.getEmail()));
             if (emailExists) {
