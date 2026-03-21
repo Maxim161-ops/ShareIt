@@ -46,8 +46,7 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(Long id, UserDto userDto) {
         User user = getUserOrThrow(id);
 
-        if (userDto.getName() != null
-                &&!userDto.getName().isBlank()) {
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
             user.setName(userDto.getName());
         }
 
