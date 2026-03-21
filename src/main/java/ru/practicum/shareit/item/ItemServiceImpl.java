@@ -23,7 +23,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден с id " + userId));
 
         Item item = ItemMapper.toItem(itemDto);
         item.setOwner(user.getId());
@@ -34,8 +34,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItem(Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Предмет не найден"));
+        Item item = getItemOrThrow(itemId);
 
         return ItemMapper.toItemDto(item);
     }
@@ -50,8 +49,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Предмет не найден"));
+        Item item = getItemOrThrow(itemId);
+
 
         if (!item.getOwner().equals(userId)) {
             throw new AccessDeniedException("Редактировать может только владелец");
@@ -86,5 +85,10 @@ public class ItemServiceImpl implements ItemService {
                         item.getDescription().toLowerCase().contains(lowerText))
                 .map(ItemMapper::toItemDto)
                 .toList();
+    }
+
+    private Item getItemOrThrow(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("Предмет не найден"));
     }
 }

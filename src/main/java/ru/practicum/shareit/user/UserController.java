@@ -18,7 +18,6 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -49,6 +48,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
         log.info("Запрос на удаление пользователя с id={}", id);
-        userRepository.deleteById(id);
+         userService.deleteUser(id);
     }
 }
