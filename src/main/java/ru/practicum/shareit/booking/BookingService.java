@@ -18,5 +18,4 @@ public interface BookingService {
 
     List<BookingDto> getOwnerBookings(Long ownerId, String state);
 
-    List<BookingDto> filterBookings(List<Booking> bookings, BookingState state);
 }
