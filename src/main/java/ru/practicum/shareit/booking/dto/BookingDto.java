@@ -1,15 +1,15 @@
 package ru.practicum.shareit.booking.dto;
 
-/**
- * TODO Sprint add-bookings.
- */
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.item.dto.ItemShortDto;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
+import ru.practicum.shareit.user.dto.UserShortDto;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -28,10 +28,10 @@ public class BookingDto {
     private LocalDateTime end;
 
     @NotNull(message = "ID вещи обязателен")
-    private Long itemId;
+    private ItemShortDto item;
 
     @NotNull
-    private Long bookerId;
+    private UserShortDto booker;
 
     private BookingStatus status;
 }
