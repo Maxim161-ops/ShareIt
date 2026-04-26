@@ -1,96 +1,98 @@
 package ru.practicum.shareIt.item;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.comment.Comment;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.comment.CommentRepository;
 import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.ItemServiceImpl;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class ItemServiceImplTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private ItemRepository itemRepository;
-
-    @Mock
-    private BookingRepository bookingRepository;
-
-    @Mock
-    private CommentRepository commentRepository;
-
-    @InjectMocks
+    @Autowired
     private ItemServiceImpl service;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private ru.practicum.shareit.item.ItemRepository itemRepository;
+
     @Test
-    void createItem_shouldReturnCreatedItem() {
+    void createItem_shouldSaveToDb() {
 
         User user = new User();
-        user.setId(1L);
-
-        Item item = new Item();
-        item.setId(10L);
-        item.setName("Drill");
-        item.setAvailable(true);
+        user.setName("Max");
+        user.setEmail("max@test.com");
+        user = userRepository.save(user);
 
         ItemDto dto = new ItemDto();
         dto.setName("Drill");
         dto.setDescription("desc");
         dto.setAvailable(true);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(itemRepository.save(any(Item.class))).thenReturn(item);
+        ItemDto result = service.createItem(user.getId(), dto);
 
-        ItemDto result = service.createItem(1L, dto);
-
+        assertNotNull(result.getId());
         assertEquals("Drill", result.getName());
     }
 
     @Test
-    void getItem_shouldReturnItem_whenNotOwner() {
+    void getItem_shouldReturnItem() {
+
+        User user = userRepository.save(new User(null, "Max", "mail@test.com"));
 
         Item item = new Item();
-        item.setId(10L);
+        item.setName("Drill");
+        item.setDescription("desc");
+        item.setAvailable(true);
+        item.setOwner(user);
 
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(item));
-        when(commentRepository.findByItemId(10L)).thenReturn(List.of());
+        item = itemRepository.save(item);
 
-        ItemDto result = service.getItem(10L, 2L);
+        ItemDto result = service.getItem(item.getId(), user.getId());
 
         assertNotNull(result);
+        assertEquals(item.getId(), result.getId());
     }
 
     @Test
     void getAllItems_shouldReturnList() {
 
+        User user = userRepository.save(new User(null, "Max", "mail@test.com"));
+
         Item item = new Item();
-        item.setId(1L);
         item.setName("Drill");
+        item.setDescription("desc");
+        item.setAvailable(true);
+        item.setOwner(user);
 
-        when(itemRepository.findByOwnerId(1L)).thenReturn(List.of(item));
-        when(commentRepository.findByItemIdIn(any())).thenReturn(List.of());
-        when(bookingRepository.findByItemIdInAndStatusOrderByStartDesc(any(), any()))
-                .thenReturn(List.of());
+        itemRepository.save(item);
 
-        List<ItemDto> result = service.getAllItems(1L);
+        List<ItemDto> result = service.getAllItems(user.getId());
 
         assertEquals(1, result.size());
     }
@@ -98,11 +100,15 @@ class ItemServiceImplTest {
     @Test
     void searchItems_shouldReturnResults() {
 
-        Item item = new Item();
-        item.setId(1L);
-        item.setName("Drill");
+        User user = userRepository.save(new User(null, "Max", "mail@test.com"));
 
-        when(itemRepository.search("drill")).thenReturn(List.of(item));
+        Item item = new Item();
+        item.setName("Drill");
+        item.setDescription("Power tool");
+        item.setAvailable(true);
+        item.setOwner(user);
+
+        itemRepository.save(item);
 
         List<ItemDto> result = service.searchItems("drill");
 
@@ -110,37 +116,34 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void addComment_shouldCreateComment_whenUserHadBooking() {
+    void addComment_shouldWork_whenBookingFinished() {
 
-        User user = new User();
-        user.setId(1L);
+        User user = userRepository.save(new User(null, "Max", "mail@test.com"));
+
+        User owner = userRepository.save(new User(null, "Owner", "owner@test.com"));
 
         Item item = new Item();
-        item.setId(10L);
+        item.setName("Drill");
+        item.setDescription("desc");
+        item.setAvailable(true);
+        item.setOwner(owner);
 
-        Comment comment = new Comment();
-        comment.setId(100L);
+        item = itemRepository.save(item);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(itemRepository.findById(10L)).thenReturn(Optional.of(item));
-
-        // пользователь имеет завершённое бронирование
-        ru.practicum.shareit.booking.Booking booking =
-                new ru.practicum.shareit.booking.Booking();
+        Booking booking = new Booking();
         booking.setItem(item);
-        booking.setStatus(ru.practicum.shareit.booking.BookingStatus.APPROVED);
-        booking.setEnd(java.time.LocalDateTime.now().minusDays(1));
+        booking.setBooker(user);
+        booking.setStatus(BookingStatus.APPROVED);
+        booking.setStart(LocalDateTime.now().minusDays(2));
+        booking.setEnd(LocalDateTime.now().minusDays(1));
 
-        when(bookingRepository.findByBookerIdOrderByStartDesc(1L))
-                .thenReturn(List.of(booking));
+        bookingRepository.save(booking);
 
-        when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+        var dto = new ru.practicum.shareit.comment.dto.CommentCreateDto("good");
 
-        ru.practicum.shareit.comment.dto.CommentCreateDto dto =
-                new ru.practicum.shareit.comment.dto.CommentCreateDto("text");
-
-        var result = service.addComment(1L, 10L, dto);
+        var result = service.addComment(user.getId(), item.getId(), dto);
 
         assertNotNull(result);
+        assertEquals("good", result.getText());
     }
 }

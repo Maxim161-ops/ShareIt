@@ -1,46 +1,38 @@
 package ru.practicum.shareIt.user;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import ru.practicum.shareit.user.UserServiceImpl;
 import ru.practicum.shareit.user.dto.UserDto;
 
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class UserServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @InjectMocks
+    @Autowired
     private UserServiceImpl userService;
 
     @Test
-    void createUser_shouldReturnCreatedUser() {
+    void createUser_shouldSaveToDb_andReturnUser() {
 
-        User user = new User();
-        user.setId(1L);
-        user.setName("Max");
-        user.setEmail("max@mail.com");
+        UserDto created = userService.createUser(
+                new UserDto(null, "Max", "max@test.com")
+        );
 
-        when(userRepository.save(any(User.class)))
-                .thenReturn(user);
+        assertNotNull(created.getId());
+        assertEquals("Max", created.getName());
+        assertEquals("max@test.com", created.getEmail());
 
-        UserDto result = userService.createUser(new UserDto(
-                null,
-                "Max",
-                "max@mail.com"
-        ));
+        UserDto fromDb = userService.getUser(created.getId());
 
-        assertEquals("Max", result.getName());
-        assertEquals("max@mail.com", result.getEmail());
+        assertEquals(created.getId(), fromDb.getId());
+        assertEquals("Max", fromDb.getName());
     }
 }

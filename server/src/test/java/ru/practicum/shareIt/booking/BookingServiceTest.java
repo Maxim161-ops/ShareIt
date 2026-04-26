@@ -1,10 +1,10 @@
 package ru.practicum.shareIt.booking;
 
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingServiceImpl;
@@ -16,144 +16,131 @@ import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
-
+import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 
-
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
 class BookingServiceTest {
 
-    @Mock
-    private BookingRepository bookingRepository;
+    @Autowired
+    private BookingServiceImpl service;
 
-    @Mock
+    @Autowired
     private UserRepository userRepository;
 
-    @Mock
+    @Autowired
     private ItemRepository itemRepository;
 
-    @InjectMocks
-    private BookingServiceImpl service;
+    @Autowired
+    private BookingRepository bookingRepository;
 
     @Test
     void createBooking_success() {
 
-        Long userId = 1L;
-        Long itemId = 2L;
+        User user = userRepository.save(new User(null, "User", "user@test.com"));
 
-        User user = new User();
-        user.setId(userId);
-
-        User owner = new User();
-        owner.setId(99L);
+        User owner = userRepository.save(new User(null, "Owner", "owner@test.com"));
 
         Item item = new Item();
-        item.setId(itemId);
+        item.setName("Drill");
+        item.setDescription("desc");
         item.setAvailable(true);
         item.setOwner(owner);
 
+        item = itemRepository.save(item);
+
         BookingCreateDto dto = new BookingCreateDto(
-                itemId,
+                item.getId(),
                 LocalDateTime.now().plusDays(1),
                 LocalDateTime.now().plusDays(2)
         );
 
-        Booking booking = new Booking();
-        booking.setId(10L);
-        booking.setItem(item);
-        booking.setBooker(user);
-        booking.setStart(dto.getStart());
-        booking.setEnd(dto.getEnd());
-        booking.setStatus(BookingStatus.WAITING);
+        BookingDto result = service.createBooking(user.getId(), dto);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
-
-        BookingDto result = service.createBooking(userId, dto);
-
-        assertNotNull(result);
-        assertEquals(10L, result.getId());
+        assertNotNull(result.getId());
+        assertEquals(BookingStatus.WAITING, result.getStatus());
     }
 
     @Test
     void createBooking_shouldFail_whenOwnerBooksOwnItem() {
 
-        Long userId = 1L;
-
-        User user = new User();
-        user.setId(userId);
+        User owner = userRepository.save(new User(null, "Owner", "owner@test.com"));
 
         Item item = new Item();
-        item.setId(2L);
+        item.setName("Drill");
+        item.setDescription("desc");
         item.setAvailable(true);
-
-        User owner = new User();
-        owner.setId(userId); // тот же пользователь
-
         item.setOwner(owner);
 
+        item = itemRepository.save(item);
+
         BookingCreateDto dto = new BookingCreateDto(
-                2L,
+                item.getId(),
                 LocalDateTime.now().plusDays(1),
                 LocalDateTime.now().plusDays(2)
         );
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(itemRepository.findById(2L)).thenReturn(Optional.of(item));
-
         assertThrows(AccessDeniedException.class,
-                () -> service.createBooking(userId, dto));
+                () -> service.createBooking(owner.getId(), dto));
     }
 
     @Test
     void getUserBookings_shouldReturnList() {
 
-        Long userId = 1L;
+        User user = userRepository.save(new User(null, "User", "user@test.com"));
+        User owner = userRepository.save(new User(null, "Owner", "owner@test.com"));
 
-        User user = new User();
-        user.setId(userId);
+        Item item = new Item();
+        item.setName("Drill");
+        item.setDescription("desc");
+        item.setAvailable(true);
+        item.setOwner(owner);
+
+        item = itemRepository.save(item);
 
         Booking booking = new Booking();
-        booking.setId(1L);
+        booking.setItem(item);
+        booking.setBooker(user);
+        booking.setStatus(BookingStatus.WAITING);
+        booking.setStart(LocalDateTime.now().plusDays(1));
+        booking.setEnd(LocalDateTime.now().plusDays(2));
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(bookingRepository.findByBookerIdOrderByStartDesc(userId))
-                .thenReturn(List.of(booking));
+        bookingRepository.save(booking);
 
-        List<BookingDto> result = service.getUserBookings(userId, "ALL");
+        List<BookingDto> result = service.getUserBookings(user.getId(), "ALL");
 
         assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getId());
     }
 
     @Test
     void getBooking_shouldReturnBooking() {
 
-        Long userId = 1L;
-        Long bookingId = 1L;
-
-        User user = new User();
-        user.setId(userId);
-
-        User owner = new User();
-        owner.setId(2L);
+        User user = userRepository.save(new User(null, "User", "user@test.com"));
+        User owner = userRepository.save(new User(null, "Owner", "owner@test.com"));
 
         Item item = new Item();
+        item.setName("Drill");
+        item.setDescription("desc");
+        item.setAvailable(true);
         item.setOwner(owner);
 
+        item = itemRepository.save(item);
+
         Booking booking = new Booking();
-        booking.setId(bookingId);
-        booking.setBooker(user);
         booking.setItem(item);
+        booking.setBooker(user);
+        booking.setStatus(BookingStatus.WAITING);
+        booking.setStart(LocalDateTime.now().plusDays(1));
+        booking.setEnd(LocalDateTime.now().plusDays(2));
 
-        when(bookingRepository.findById(bookingId))
-                .thenReturn(Optional.of(booking));
+        booking = bookingRepository.save(booking);
 
-        BookingDto result = service.getBooking(userId, bookingId);
+        BookingDto result = service.getBooking(user.getId(), booking.getId());
 
-        assertEquals(bookingId, result.getId());
+        assertEquals(booking.getId(), result.getId());
     }
 }
