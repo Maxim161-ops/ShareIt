@@ -10,6 +10,7 @@ import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.UserServiceImpl;
 import ru.practicum.shareit.user.dto.UserDto;
 
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

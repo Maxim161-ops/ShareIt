@@ -9,9 +9,9 @@ import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.request.ItemRequestServiceImpl;
-import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -20,8 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.anyList;
 
+
 @ExtendWith(MockitoExtension.class)
-class ItemRequestServiceImplTest {
+class ItemRequestServiceTest {
 
     @Mock
     private ItemRequestRepository requestRepository;

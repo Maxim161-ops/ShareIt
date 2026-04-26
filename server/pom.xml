@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>server</artifactId>
-    <name>shareit-server</name>
+    <name>server</name>
     <packaging>jar</packaging>
 
     <properties>
