@@ -1,11 +1,11 @@
-package ru.practicum.shareIt.request;
+package ru.practicum.shareit.request;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.request.ItemRequestServiceImpl;
+import ru.practicum.shareit.ShareItServerApp;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.user.UserServiceImpl;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(classes = ShareItServerApp.class)
 @ActiveProfiles("test")
 @Transactional
 class ItemRequestServiceTest {
@@ -34,7 +34,7 @@ class ItemRequestServiceTest {
 
         ItemRequestDto created = requestService.create(
                 user.getId(),
-                new ItemRequestDto(null, "Need drill", null, null)
+                new ItemRequestDto(null, "{Нужна дрель}", null, null)
         );
 
         List<ItemRequestDto> result = requestService.getUserRequests(user.getId());
@@ -52,7 +52,7 @@ class ItemRequestServiceTest {
 
         ItemRequestDto created = requestService.create(
                 user.getId(),
-                new ItemRequestDto(null, "Need drill", null, null)
+                new ItemRequestDto(null, "Нужна дрель", null, null)
         );
 
         ItemRequestDto result = requestService.getRequestById(
@@ -61,6 +61,6 @@ class ItemRequestServiceTest {
         );
 
         assertEquals(created.getId(), result.getId());
-        assertEquals("Need drill", result.getDescription());
+        assertEquals("Нужна дрель", result.getDescription());
     }
 }

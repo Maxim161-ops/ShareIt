@@ -1,14 +1,11 @@
-package ru.practicum.shareIt.booking;
+package ru.practicum.shareit.booking;
 
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.BookingServiceImpl;
-import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.ShareItServerApp;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.exception.AccessDeniedException;
@@ -21,7 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
-@SpringBootTest
+@SpringBootTest(classes = ShareItServerApp.class)
 @ActiveProfiles("test")
 @Transactional
 class BookingServiceTest {
