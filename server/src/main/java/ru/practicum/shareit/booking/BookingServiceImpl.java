@@ -34,10 +34,6 @@ public class BookingServiceImpl implements BookingService {
 
         Item item = getItemOrThrow(dto.getItemId());
 
-        if (dto.getEnd().isBefore(dto.getStart()) || dto.getEnd().isEqual(dto.getStart())) {
-            log.warn("Неверные даты бронирования: start={}, end={}", dto.getStart(), dto.getEnd());
-            throw new IllegalArgumentException("Дата окончания должна быть позже даты начала");
-        }
 
         if (!item.getAvailable()) {
             log.warn("Вещь недоступна для бронирования: itemId={}", item.getId());
@@ -53,8 +49,9 @@ public class BookingServiceImpl implements BookingService {
         Booking saved = bookingRepository.save(booking);
         log.info("Бронирование создано: bookingId={}", saved.getId());
 
+        Long bookingId = saved.getId();
         Booking fullBooking = bookingRepository.findById(saved.getId())
-                .orElseThrow(() -> new RuntimeException("Бронирование не найдено после сохранения"));
+                .orElseThrow(() -> new RuntimeException("Бронирование не найдено после сохранения, id=" + bookingId));
 
         return BookingMapper.toDto(fullBooking);
     }

@@ -31,10 +31,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         User user = getUser(userId);
 
-        ItemRequest request = new ItemRequest();
-        request.setDescription(dto.getDescription());
-        request.setRequester(user);
-        request.setCreated(LocalDateTime.now());
+        ItemRequest request = ItemRequestMapper.toEntity(dto, user);
 
         ItemRequest saved = requestRepository.save(request);
 
@@ -77,7 +74,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         getUser(userId);
 
         ItemRequest request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Запрос не найден"));
+                .orElseThrow(() -> new NotFoundException("Запрос не найден, id=" + requestId));
 
         List<ItemShortDto> items = itemRepository.findByRequestId(requestId)
                 .stream()
@@ -110,6 +107,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден, id=" + userId));
     }
 }

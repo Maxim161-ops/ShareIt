@@ -49,8 +49,9 @@ public class ItemServiceImpl implements ItemService {
         ItemRequest request = null;
 
         if (itemDto.getRequestId() != null) {
-            request = itemRequestRepository.findById(itemDto.getRequestId())
-                    .orElseThrow(() -> new NotFoundException("Запрос не найден"));
+            Long requestId = itemDto.getRequestId();
+            request = itemRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new NotFoundException("Запрос не найден, id=" + requestId));
         }
 
         Item item = ItemMapper.toItem(itemDto, user, request);
@@ -199,11 +200,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> searchItems(String text) {
         log.info("Поиск предметов по тексту: {}", text);
-
-        if (text == null || text.isBlank()) {
-            log.info("Пустой запрос поиска — возвращаем пустой список");
-            return List.of();
-        }
 
         List<ItemDto> result = itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)

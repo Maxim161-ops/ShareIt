@@ -8,6 +8,8 @@ import ru.practicum.shareit.comment.CommentCreateDto;
 
 import ru.practicum.shareit.item.dto.ItemDto;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/items")
@@ -50,6 +52,11 @@ public class ItemController {
 
     @GetMapping("/search")
     public ResponseEntity<Object> search(@RequestParam String text) {
+
+        if (text == null || text.isBlank()) {
+            return ResponseEntity.ok(List.of());
+        }
+
         return itemClient.searchItems(text);
     }
 
@@ -57,7 +64,7 @@ public class ItemController {
     public ResponseEntity<Object> comment(
             @RequestHeader("X-Sharer-User-Id") Long userId,
             @PathVariable Long itemId,
-            @RequestBody CommentCreateDto dto) {
+            @RequestBody @Valid CommentCreateDto dto) {
 
         return itemClient.addComment(userId, itemId, dto);
     }
