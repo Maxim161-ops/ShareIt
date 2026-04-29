@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking.dto;
 
-import jakarta.validation.constraints.Future;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,10 +16,8 @@ public class BookingCreateDto {
     private Long itemId;
 
     @NotNull
-    @Future
     private LocalDateTime start;
 
     @NotNull
-    @Future
     private LocalDateTime end;
 }
