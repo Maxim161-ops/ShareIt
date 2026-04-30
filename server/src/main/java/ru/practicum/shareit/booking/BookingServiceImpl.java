@@ -49,9 +49,7 @@ public class BookingServiceImpl implements BookingService {
         Booking saved = bookingRepository.save(booking);
         log.info("Бронирование создано: bookingId={}", saved.getId());
 
-        Long bookingId = saved.getId();
-        Booking fullBooking = bookingRepository.findById(saved.getId())
-                .orElseThrow(() -> new RuntimeException("Бронирование не найдено после сохранения, id=" + bookingId));
+        Booking fullBooking = getBookingOrThrow(saved.getId());
 
         return BookingMapper.toDto(fullBooking);
     }

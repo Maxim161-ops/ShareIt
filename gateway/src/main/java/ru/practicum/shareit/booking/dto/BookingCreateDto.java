@@ -5,11 +5,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
+import ru.practicum.shareit.booking.validation.ValidBookingDates;
+
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidBookingDates
 public class BookingCreateDto {
 
     @NotNull
