@@ -1,0 +1,71 @@
+package ru.practicum.shareit.item;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.comment.CommentCreateDto;
+
+import ru.practicum.shareit.item.dto.ItemDto;
+
+import java.util.List;
+
+
+@RestController
+@RequestMapping("/items")
+@RequiredArgsConstructor
+public class ItemController {
+
+    private final ItemClient itemClient;
+
+    @PostMapping
+    public ResponseEntity<Object> create(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestBody @Valid ItemDto dto) {
+
+        return itemClient.createItem(userId, dto);
+    }
+
+    @GetMapping("/{itemId}")
+    public ResponseEntity<Object> getItem(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PathVariable Long itemId) {
+
+        return itemClient.getItem(userId, itemId);
+    }
+
+    @GetMapping
+    public ResponseEntity<Object> getAll(
+            @RequestHeader("X-Sharer-User-Id") Long userId) {
+
+        return itemClient.getAllItems(userId);
+    }
+
+    @PatchMapping("/{itemId}")
+    public ResponseEntity<Object> update(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PathVariable Long itemId,
+            @RequestBody @Valid ItemDto dto) {
+
+        return itemClient.updateItem(userId, itemId, dto);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Object> search(@RequestParam String text) {
+
+        if (text == null || text.isBlank()) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        return itemClient.searchItems(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public ResponseEntity<Object> comment(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PathVariable Long itemId,
+            @RequestBody @Valid CommentCreateDto dto) {
+
+        return itemClient.addComment(userId, itemId, dto);
+    }
+}
